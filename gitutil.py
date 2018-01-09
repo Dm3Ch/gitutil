@@ -26,6 +26,14 @@ def get_merge_commit_sha(merge_message, target_branch_head):
   else:
     return False
 
+def drop_commit(repo, commit_sha):
+  try:
+    repo.git.rebase('-p', '--onto', commit_sha+'^', commit_sha)
+  except git.GitCommandError as err:
+    command, status, stderr_value, stdout_value = err.args
+    print('[ERROR] Error dropping previous merge commit:\n  Command: git {0}\n  Status: {1}\n  Stderr: {2}\n  Stdout: {3}'.format(command[1], status, stderr_value, stdout_value))
+    sys.exit(3)
+
 parser = argparse.ArgumentParser()
 parser.add_argument("source_branch", help="Source branch for merge")
 parser.add_argument("target_branch", help="Target branch for merge")
@@ -58,6 +66,8 @@ merge_message = get_merge_message(args.source_branch, args.target_branch)
 merge_commit_sha = get_merge_commit_sha(merge_message, heads.master)
 if merge_commit_sha:
   print('[INFO] Merge commit already exists in target branch with sha: ' + merge_commit_sha)
+  drop_commit(repo, merge_commit_sha)
+  print('[INFO] Merge commit \'{}\' sucessfully was dropped\n'.format(merge_commit_sha))
 
 try:
   repo.git.checkout(args.target_branch)
@@ -68,4 +78,4 @@ except git.GitCommandError as err:
   print('[ERROR] Error while merging:\n  Command: git {0}\n  Status: {1}\n  Stderr: {2}\n  Stdout: {3}'.format(command[1], status, stderr_value, stdout_value))
   sys.exit(3)
 
-print('[INFO] Succesfully exit')
+print('[INFO] Successfully merged')
