@@ -3,8 +3,6 @@ import os
 import git
 import sys
 
-from pprint import pprint
-
 def branch_exist(heads, branch_name):
   for head in heads:
     if head.name == branch_name:
